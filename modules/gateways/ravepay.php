@@ -209,7 +209,7 @@ function ravepay_link($params)
                 $.post("'.$callbackUrl.'",
                 {
                     flw_ref: ref,
-                    txRef: '.$txRef.',
+                    txref: '.$txRef.',
                     amount: '.$amount.',
                     invoice_id: '.$invoiceId.'
                 },
