@@ -194,7 +194,7 @@ function ravepay_link($params)
                         console.log("d:",response);
                         if (response.tx) {
                             $("#ravepayMsg").html("<h5>Transaction status: "+response.tx.status+". </h5><h5>Transaction ref is "+response.tx.txRef+". </h5><h5>Response: "+response.tx.vbvrespmessage+". </h5>Please wait while we process your Invoice ...");
-                            verifyRavepayPayment(response.tx.flw_ref);
+                            verifyRavepayPayment(response.tx.flwRef);
                         } else {
                             $("#ravepayMsg").html("<h5>Transaction status: "+response.data.data.status+". </h5><h5>Response: "+response.data.data.message+". </h5>");
                         }
@@ -208,7 +208,8 @@ function ravepay_link($params)
               function verifyRavepayPayment(ref){
                 $.post("'.$callbackUrl.'",
                 {
-                    ref: ref,
+                    flw_ref: ref,
+                    txRef: '.$txRef.',
                     amount: '.$amount.',
                     invoice_id: '.$invoiceId.'
                 },
