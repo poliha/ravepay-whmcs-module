@@ -23,7 +23,8 @@ if (!$gatewayParams['type']) {
 
 // Retrieve data returned in payment gateway callback
 $success = false; //assume failed verification
-$txRef = $_POST["ref"];
+$txRef = $_POST["txRef"];
+$flw_ref = $_POST["flw_ref"];
 $invoiceId = $_POST["invoice_id"];
 $paymentAmount = $_POST["amount"];
 
@@ -31,40 +32,47 @@ $paymentAmount = $_POST["amount"];
  * Validate callback authenticity.
  */
 
-// $txRef = '1ed5ce371610281c32c6505103559730';
 
- $testMode = $gatewayParams['testMode'];
+
+ $testMode = $params['testMode'];
 
     if ($testMode == 'on') {
-        $secretKey = $gatewayParams['testSecretKey'];
-        $publicKey = $gatewayParams['testPublicKey'];
-
+        // test details as specified by flutterwave
+        $secretKey = 'FLWSECK-bb971402072265fb156e90a3578fe5e6-X';
+        $publicKey = 'FLWPUBK-e634d14d9ded04eaf05d5b63a0a06d2f-X';
+        $verifyUrl = 'https://flw-pms-dev.eu-west-1.elasticbeanstalk.com/flwv3-pug/getpaidx/api/verify';
     } else {
-        $secretKey = $gatewayParams['liveSecretKey'];
-        $publicKey = $gatewayParams['livePublicKey'];
+        $secretKey = $params['liveSecretKey'];
+        $publicKey = $params['livePublicKey'];
+        $verifyUrl = 'https://api.ravepay.co/flwv3-pug/getpaidx/api/verify';
+
     }
 
 
 // $auth_header = 'Authorization: Bearer '.$secretKey;
 // $verify_url = 'https://api.ravepay.co/transaction/verify/'.$txRef;
+    $reqBody = array(); 
+    $reqBody['SECKEY'] = $secretKey;
+    $reqBody['flw_ref'] = $flw_ref;
 
-// $ch = curl_init();
-//     curl_setopt($ch, CURLOPT_URL, $verify_url);
-//     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $secretKey"]);
-//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//     $rdata = curl_exec($ch);
+    $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $verifyUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($reqBody));
+    $rdata = curl_exec($ch);
 
-//     curl_close($ch);
+    curl_close($ch);
 
-// $output = json_decode($rdata);
+    $output = json_decode($rdata);
 
+    die("output", $output);
 
-
-// $verifyStatus = $output->status;
-// $verifyMessage = $output->message;
-// $txStatus = $output->data->status;
-// $txAmount = $output->data->amount;
-$verifyStatus =false;
+    $verifyStatus = $output->status;
+    $verifyMessage = $output->message;
+    $txStatus = $output->data->status;
+    $txAmount = $output->data->amount;
+    $verifyStatus =false;
 if ($verifyStatus) {
 
     if ($txStatus == 'success' && $txAmount == $paymentAmount) 
