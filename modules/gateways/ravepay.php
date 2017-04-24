@@ -1,6 +1,6 @@
 <?php
 /**
- * RavePay Payment Gateway Module for WHMCS 
+ * RavePay Payment Gateway Module for WHMCS
  * Author: Peter Oliha
  * Twitter: @PeterOliha
  *
@@ -45,21 +45,14 @@ function ravepay_config()
             'Value' => 'Credit/Debit cards - Ravepay',
         ),
         
-        'testSecretKey' => array(
-            'FriendlyName' => 'Test Secret Key',
-            'Type' => 'password',
-            'Size' => '64',
-            'Default' => '',
-            'Description' => 'Enter test secret key here',
-        ),
-        
-        'testPublicKey' => array(
-            'FriendlyName' => 'Test Public Key',
+        'livePublicKey' => array(
+            'FriendlyName' => 'Live Public Key',
             'Type' => 'password',
             'Size' => '64',
             'Default' => '',
             'Description' => 'Enter test public key here',
         ),
+
         'liveSecretKey' => array(
             'FriendlyName' => 'Live Secret Key',
             'Type' => 'password',
@@ -67,14 +60,8 @@ function ravepay_config()
             'Default' => '',
             'Description' => 'Enter live secret key here',
         ),
+
         
-        'livePublicKey' => array(
-            'FriendlyName' => 'Live Public Key',
-            'Type' => 'password',
-            'Size' => '64',
-            'Default' => '',
-            'Description' => 'Enter test public key here',
-        ),        
         // the yesno field type displays a single checkbox option
         'testMode' => array(
             'FriendlyName' => 'Test Mode',
@@ -82,8 +69,16 @@ function ravepay_config()
             'Description' => 'Tick to enable test mode',
             'Default' => '0',
         ),
-        
-        
+
+        // the yesno field type displays a single checkbox option
+        'enableUSD' => array(
+            'FriendlyName' => 'Enable USD',
+            'Type' => 'yesno',
+            'Description' => 'Tick to enable USD payments',
+            'Default' => '0',
+        ),
+
+
     );
 }
 
@@ -104,21 +99,23 @@ function ravepay_config()
 function ravepay_link($params)
 {
     // Gateway Configuration Parameters
-    
-    
+
+
     $testMode = $params['testMode'];
 
     if ($testMode == 'on') {
-        
-        $secretKey = $params['testSecretKey'];
-        $publicKey = $params['testPublicKey'];
+        // test details as specified by flutterwave
+        $secretKey = 'FLWSECK-bb971402072265fb156e90a3578fe5e6-X';
+        $publicKey = 'FLWPUBK-e634d14d9ded04eaf05d5b63a0a06d2f-X';
+        $payBaseUrl = '<script type="text/javascript" src="http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/flwv3-pug/getpaidx/api/flwpbf-inline.js"></script>';
     } else {
         $secretKey = $params['liveSecretKey'];
         $publicKey = $params['livePublicKey'];
-        
+        $payBaseUrl = '<script type="text/javascript" src="https://api.ravepay.co/flwv3-pug/getpaidx/api/flwpbf-inline.js"></script> ';
+
     }
-    
-    
+
+
     // Invoice Parameters
     $invoiceId = $params['invoiceid'];
     $description = $params["description"];
@@ -140,33 +137,71 @@ function ravepay_link($params)
     $moduleName = $params['paymentmethod'];
     $whmcsVersion = $params['whmcsVersion'];
     $callbackUrl = $systemUrl . '/modules/gateways/callback/ravepay.php';
-  
+
     //payment Parameters
     $txRef = md5(uniqid(rand(),true));
     $koboAmount = $amount*100;
 
+    $jqueryUrl = '<script  src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="  crossorigin="anonymous"></script>';
+
+    $postfields = array();
+    $postfields['PBFPubKey'] = $publicKey;
+    $postfields['txref'] = $txRef;
+    $postfields['amount'] = $koboAmount;
+    $postfields['username'] = $username;
+    $postfields['currency'] = strtoupper($currencyCode);
+    $postfields['country'] = $country;
+    $postfields['customer_email'] = $email;
+    $postfields['customer_firstname'] = $firstname;
+    $postfields['customer_lastname'] = $lastname;
+    $postfields['redirect_url'] = "";
+    $postfields['customer_phone'] = $phone;
+    // optional Params
+    $postfields['pay_button_text'] = "";
+    $postfields['custom_title'] = "";
+    $postfields['custom_description'] = "";
+    $postfields['custom_logo'] = "";
+    $postfields['meta-invoice_id'] = $invoiceId;
+    $postfields['meta-description'] = $description;
+    $postfields['meta-address1'] = $address1;
+    $postfields['meta-address2'] = $address2;
+    $postfields['meta-city'] = $city;
+    $postfields['meta-state'] = $state;
+    $postfields['meta-postcode'] = $postcode;
+
+
+
+
     if (strtoupper($currencyCode) == 'NGN') {
-        $htmlOutput =   '
-            <script src="https://js.ravepay.co/v1/inline.js"></script>
-            <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
-            <script>
-              function payWithRavepay(){
-                var handler = RavepayPop.setup({
-                  key: "'.$publicKey.'",
-                  email: "'.$email.'",
-                  amount: '.$koboAmount.',
-                  ref: "'.$txRef.'",
-                  callback: function(response){
-                      $("#ravepayMsg").html("<h5>Transaction ref is "+response.trxref+". </h5>Please wait while we pprocess your payment ...");
-                      
-                      verifyRavepayPayment(response.trxref);
-                  },
-                  onClose: function(){
-                      ravepayClosed();
-                      
-                  }
+        
+        $htmlOutput = $payBaseUrl;
+        $htmlOutput .= $jqueryUrl;
+        $htmlOutput .= '<script>
+              function setupRavepay(){
+                getpaidSetup({
+                    customer_email: "'.$email.'",
+                    customer_lastname: "'.$lastname.'",
+                    customer_firstname: "'.$firstname.'",
+                    currency: "'.strtoupper($currencyCode).'",
+                    amount: "'.$amount.'",
+                    txref: "'.$txRef.'",
+                    PBFPubKey: "'.$publicKey.'",
+
+                    onclose:function(){
+                        ravepayClosed();
+                    },
+                    callback:function(response){
+                        console.log("d:",response);
+                        if (response.tx) {
+                            $("#ravepayMsg").html("<h5>Transaction status: "+response.tx.status+". </h5><h5>Transaction ref is "+response.tx.txRef+". </h5><h5>Response: "+response.tx.vbvrespmessage+". </h5>Please wait while we process your Invoice ...");
+                        } else {
+                            $("#ravepayMsg").html("<h5>Transaction status: "+response.data.data.status+". </h5><h5>Response: "+response.data.data.message+". </h5>");
+                        }
+
+                    }
                 });
-                handler.openIframe();
+
+
               }
 
               function verifyRavepayPayment(ref){
@@ -187,21 +222,21 @@ function ravepay_link($params)
               }
 
             </script>
-            
+
             <div id="ravepayMsg"></div>
-            <form >
-              
-              <button type="button" onclick="payWithRavepay()"> Pay via Credit/Debit card</button> 
+           <form >
+
+              <button type="button" onclick="setupRavepay()"> Pay via Credit/Debit card</button>
             </form>';
 
     } else {
         $htmlOutput = "<h2>Payment only supported in Nigerian Naira(NGN)</h2>";
     }
-    
+
 
 
     return $htmlOutput;
-  
+
 
 }
 
