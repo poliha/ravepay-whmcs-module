@@ -42,7 +42,7 @@ function ravepay_config()
         // defined here for backwards compatibility
         'FriendlyName' => array(
             'Type' => 'System',
-            'Value' => 'Credit/Debit cards - Ravepay',
+            'Value' => 'Credit/Debit cards - Zoycom Ravepay',
         ),
         
         'livePublicKey' => array(
@@ -172,7 +172,7 @@ function ravepay_link($params)
 
 
 
-    if (strtoupper($currencyCode) == 'NGN') {
+    if (strtoupper($currencyCode) == 'NGN' || strtoupper($currencyCode) == 'USD' ) {
         
         $htmlOutput = $payBaseUrl;
         $htmlOutput .= $jqueryUrl;
@@ -216,7 +216,7 @@ function ravepay_link($params)
               }
 
               function ravepayClosed(){
-                 $("#ravepaycloseMsg").html("Payment Closed");
+                 $("#ravepayCloseMsg").html("Payment Closed");
               }
 
             </script>
@@ -229,7 +229,7 @@ function ravepay_link($params)
             </form>';
 
     } else {
-        $htmlOutput = "<h2>Payment only supported in Nigerian Naira(NGN)</h2>";
+        $htmlOutput = "<h2>Payment only supported in Nigerian Naira(NGN) and US Dollars(USD)</h2>";
     }
 
 
