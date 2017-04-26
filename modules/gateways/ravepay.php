@@ -211,17 +211,18 @@ function ravepay_link($params)
                 },
                 function(data, status){
                     $("#ravepayMsg").html(data);
-                    //location.reload();
+                    location.reload();
                 });
               }
 
               function ravepayClosed(){
-                 //$("#ravepayMsg").html("Payment Cancelled");
+                 $("#ravepaycloseMsg").html("Payment Closed");
               }
 
             </script>
 
             <div id="ravepayMsg"></div>
+            <div id="ravepayCloseMsg"></div>
            <form >
 
               <button type="button" onclick="setupRavepay()"> Pay via Credit/Debit card</button>
