@@ -201,26 +201,22 @@ function ravepay_link($params)
 
                     }
                 });
-
-
               }
-
               function verifyRavepayPayment(ref){
                 $.post("'.$callbackUrl.'",
-                {
-                    flw_ref: ref,
-                    txref: '.$txRef.',
-                    amount: '.$amount.',
-                    invoice_id: '.$invoiceId.'
+                {   flw_ref: ref,
+                    txref: "'.$txRef.'",
+                    amount: "'.$amount.'",
+                    invoice_id: "'.$invoiceId.'"
                 },
                 function(data, status){
                     $("#ravepayMsg").html(data);
-                    location.reload();
+                    //location.reload();
                 });
               }
 
               function ravepayClosed(){
-                 $("#ravepayMsg").html("Payment Cancelled");
+                 //$("#ravepayMsg").html("Payment Cancelled");
               }
 
             </script>

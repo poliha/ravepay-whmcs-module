@@ -23,67 +23,76 @@ if (!$gatewayParams['type']) {
 
 // Retrieve data returned in payment gateway callback
 $success = false; //assume failed verification
-$txRef = $_POST["txRef"];
+$txRef = $_POST["txref"];
 $flw_ref = $_POST["flw_ref"];
 $invoiceId = $_POST["invoice_id"];
 $paymentAmount = $_POST["amount"];
-
+$verifyStatus =false;
 /**
  * Validate callback authenticity.
  */
 
 
 
- $testMode = $params['testMode'];
+ $testMode = $gatewayParams['testMode'];
 
     if ($testMode == 'on') {
         // test details as specified by flutterwave
         $secretKey = 'FLWSECK-bb971402072265fb156e90a3578fe5e6-X';
         $publicKey = 'FLWPUBK-e634d14d9ded04eaf05d5b63a0a06d2f-X';
-        $verifyUrl = 'https://flw-pms-dev.eu-west-1.elasticbeanstalk.com/flwv3-pug/getpaidx/api/verify';
+        $verifyUrl = 'http://flw-pms-dev.eu-west-1.elasticbeanstalk.com/flwv3-pug/getpaidx/api/verify';
     } else {
-        $secretKey = $params['liveSecretKey'];
-        $publicKey = $params['livePublicKey'];
+        $secretKey = $gatewayParams['liveSecretKey'];
+        $publicKey = $gatewayParams['livePublicKey'];
         $verifyUrl = 'https://api.ravepay.co/flwv3-pug/getpaidx/api/verify';
 
     }
 
 
-// $auth_header = 'Authorization: Bearer '.$secretKey;
-// $verify_url = 'https://api.ravepay.co/transaction/verify/'.$txRef;
     $reqBody = array(); 
-    $reqBody['SECKEY'] = $secretKey;
-    $reqBody['flw_ref'] = $flw_ref;
+    $reqBody["SECKEY"] = $secretKey;
+    $reqBody["flw_ref"] = $flw_ref;
 
     $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $verifyUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($reqBody));
+    curl_setopt_array($ch, array(
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => $verifyUrl,
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => http_build_query($reqBody)
+        ));
+
     $rdata = curl_exec($ch);
+    $chinfo = curl_getinfo ($ch);
+    
+    if(curl_error($ch))
+    {
+        // echo 'Error:' . curl_error($ch).'\n';
+        echo 'Error: connecting to server. Contact support\n';
+        die("Invoice not updated");
+    }
 
     curl_close($ch);
 
     $output = json_decode($rdata);
-
-    die("output", $output);
+    
 
     $verifyStatus = $output->status;
     $verifyMessage = $output->message;
     $txStatus = $output->data->status;
     $txAmount = $output->data->amount;
-    $verifyStatus =false;
-if ($verifyStatus) {
+    $paymentFee = $output->data->appfee;
 
-    if ($txStatus == 'success' && $txAmount == $paymentAmount) 
-    {
-        $success = true;
+    if ($verifyStatus == 'success') {
+
+        if ($txStatus == 'successful' && $txAmount == $paymentAmount) 
+        {
+            $success = true;
+        }
+        
+    } 
+    else {
+        $success = false;
     }
-    
-} 
-else {
-    $success = false;
-}
 
 
 
@@ -141,7 +150,7 @@ if ($success) {
      */
     
     //convert amount back to decimals
-    $paymentAmount = floatval($paymentAmount/100);
+    $paymentAmount = floatval($paymentAmount);
 
     addInvoicePayment(
         $invoiceId,
@@ -153,14 +162,12 @@ if ($success) {
 
     // Return success message
     $msg = '<h1 class="text-success">Payment Successful</h1>
-            <p>'.$verifyMessage.'</p>';
-    
+            <p>'.$verifyStatus. ': '.$verifyMessage.'</p>';
     print_r($msg);
 }else {
     // Return failure message
     $msg = '<h1 class="text-danger">Payment Failed</h1>
-            <p>'.$verifyMessage.'</p>';
-    
+            <p>'.$verifyStatus. ': '.$verifyMessage.'</p>';
     print_r($msg);
 }
 
