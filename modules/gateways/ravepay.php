@@ -50,7 +50,7 @@ function ravepay_config()
             'Type' => 'password',
             'Size' => '64',
             'Default' => '',
-            'Description' => 'Enter test public key here',
+            'Description' => 'Enter live public key here',
         ),
 
         'liveSecretKey' => array(
