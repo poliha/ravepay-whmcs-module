@@ -1,8 +1,8 @@
 
-#Ravepay WHMCS module
+# Ravepay WHMCS module
 Allows you to add ravepay payment gateway to WHMCS
 
-#Installation
+## Installation
 
 upload
 `/modules/gateways/ravepay.php` and `/modules/gateways/callback/ravepay.php`
@@ -18,6 +18,6 @@ Congrats you can now receive payments using ravepay.
 NB: You might want to check if everything works fine in test mode before disabling it.
 
 
-#Contact
+# Contact
 This plugin is still under development. Please report any issues using the issue tracker.
 Thank you.
