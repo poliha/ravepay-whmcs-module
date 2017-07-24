@@ -24,7 +24,7 @@ function ravepay_MetaData()
     return array(
         'DisplayName' => 'Ravepay',
         'APIVersion' => '1.1', // Use API Version 1.1
-        'DisableLocalCredtCardInput' => true,
+        'DisableLocalCreditCardInput' => true,
         'TokenisedStorage' => false,
     );
 }
@@ -70,14 +70,19 @@ function ravepay_config()
             'Default' => '0',
         ),
 
-        // the yesno field type displays a single checkbox option
-        'enableUSD' => array(
-            'FriendlyName' => 'Enable USD',
-            'Type' => 'yesno',
-            'Description' => 'Tick to enable USD payments',
-            'Default' => '0',
-        ),
+        // // the yesno field type displays a single checkbox option
+        // 'enableUSD' => array(
+        //     'FriendlyName' => 'Enable USD',
+        //     'Type' => 'yesno',
+        //     'Description' => 'Tick to enable USD payments',
+        //     'Default' => '0',
+        // ),
 
+        'supportedCurrencies' => array(
+            'FriendlyName' => 'Supported Currencies',
+            'Type' => 'System',
+            'Value' => 'EUR, GBP, GHS, KES, NGN, USD, ZAR',
+        ),
 
     );
 }
@@ -141,6 +146,8 @@ function ravepay_link($params)
     //payment Parameters
     $txRef = md5(uniqid(rand(),true));
     $koboAmount = $amount*100;
+    // reduce string to array
+    $currencyArray = explode(",", $params['supportedCurrencies']);
 
     $jqueryUrl = '<script  src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="  crossorigin="anonymous"></script>';
 
@@ -172,8 +179,8 @@ function ravepay_link($params)
 
 
 
-    if (strtoupper($currencyCode) == 'NGN' || strtoupper($currencyCode) == 'USD' ) {
-        
+    if ( in_array(strtoupper($currencyCode), $currencyArray) ) {
+
         $htmlOutput = $payBaseUrl;
         $htmlOutput .= $jqueryUrl;
         $htmlOutput .= '<script>
@@ -229,7 +236,7 @@ function ravepay_link($params)
             </form>';
 
     } else {
-        $htmlOutput = "<h2>Payment only supported in Nigerian Naira(NGN) and US Dollars(USD)</h2>";
+        $htmlOutput = "<h2>Payment service only supports ".$params['supportedCurrencies']."</h2>";
     }
 
 
