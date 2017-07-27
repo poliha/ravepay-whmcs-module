@@ -44,7 +44,15 @@ function ravepay_config()
             'Type' => 'System',
             'Value' => 'Credit/Debit cards - Zoycom Ravepay',
         ),
-        
+
+        // the yesno field type displays a single checkbox option
+        'testMode' => array(
+            'FriendlyName' => 'Test Mode',
+            'Type' => 'yesno',
+            'Description' => 'Tick to enable test mode',
+            'Default' => '0',
+        ),
+
         'livePublicKey' => array(
             'FriendlyName' => 'Live Public Key',
             'Type' => 'password',
@@ -61,13 +69,16 @@ function ravepay_config()
             'Description' => 'Enter live secret key here',
         ),
 
-        
         // the yesno field type displays a single checkbox option
-        'testMode' => array(
-            'FriendlyName' => 'Test Mode',
-            'Type' => 'yesno',
-            'Description' => 'Tick to enable test mode',
-            'Default' => '0',
+        'paymentChannels' => array(
+            'FriendlyName' => 'Payment Channels',
+            'Type' => 'dropdown',
+            'Options' => array(
+                'Card' => 'card',
+                'Bank Account' => 'account',
+                'Both' => 'both',
+            ),
+            'Description' => 'Choose one',
         ),
 
         // // the yesno field type displays a single checkbox option
@@ -148,6 +159,7 @@ function ravepay_link($params)
     $koboAmount = $amount*100;
     // reduce string to array
     $currencyArray = explode(",", $params['supportedCurrencies']);
+    $paymentChannel = $params['paymentChannels'];
 
     $jqueryUrl = '<script  src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="  crossorigin="anonymous"></script>';
 
@@ -192,6 +204,7 @@ function ravepay_link($params)
                     currency: "'.strtoupper($currencyCode).'",
                     amount: "'.$amount.'",
                     txref: "'.$txRef.'",
+                    payment_method: "'.$paymentChannel.'",
                     PBFPubKey: "'.$publicKey.'",
 
                     onclose:function(){
